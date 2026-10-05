@@ -1,0 +1,11 @@
+{
+  "name": "pebble-sentinel",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "npm --prefix web ci && npm --prefix web run build",
+    "dev": "npm --prefix web run dev"
+  },
+  "engines": {"node": ">=22.13.0"}
+}

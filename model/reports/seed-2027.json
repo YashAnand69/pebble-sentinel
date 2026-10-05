@@ -1,0 +1,1 @@
+{"parameters":1288368,"config":{"vocab":51,"context":256,"width":144,"heads":4,"layers":5,"expansion":576},"seed":2027,"steps":500,"batch":2,"length":256,"baseline":4.047552506128947,"bestValidationLoss":0.40074391580290264,"bestStep":300,"elapsedSeconds":425.858,"backend":"wasm"}

@@ -1,0 +1,13 @@
+export class Tokenizer {
+ fn init() {
+  this.vocabulary = parseJSON(io.readText("pal_vocab_v0.json"));
+  this.lookup = {};
+  for index in range(len(this.vocabulary)) { this.lookup[this.vocabulary[index]] = index; }
+  this.bos = 0; this.eos = 1; this.pad = 2; this.unknown = 3;
+ }
+ fn encode(text) {
+  let ids = [];
+  for word in text.trim().split(" ") { if (word != "") { ids.push(this.lookup[word] ?? this.unknown); } }
+  return ids;
+ }
+}

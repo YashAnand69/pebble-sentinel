@@ -1,0 +1,18 @@
+import { Transformer } from "./transformer.pebble";
+const model = Transformer();
+const metadata = io.loadWeights("weights/seed-2026.pebble-weights",model.parameters);
+const cases = parseJSON(io.readText("parity-input.json"));
+let outputs = [];
+for fixture in cases {
+ let prefix = fixture.historyTokens; let bits = [];
+ for next in fixture.actionTokens {
+  const selected = prefix.slice(max(0,len(prefix)-256));
+  const length = len(selected); let targets = [];
+  for index in range(length) { targets.push(index == length-1 ? next : -1); }
+  const loss = ml.scope(fn() => ml.item(model.loss(ml.tensor(selected,[1,length],"int32"),ml.tensor(targets,[1,length],"int32"))));
+  bits.push(loss / log(2)); prefix.push(next);
+ }
+ outputs.push({name:fixture.name,historyTokens:fixture.historyTokens.slice(0,len(fixture.historyTokens)-len(fixture.actionTokens)),actionTokens:fixture.actionTokens,tokenBits:bits});
+}
+io.writeText("reports/parity.json",stringifyJSON({metadata,cases:outputs}));
+print("Cross-runtime parity fixtures exported");

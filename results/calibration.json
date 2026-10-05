@@ -1,0 +1,40 @@
+{
+  "source": "benign calibration only",
+  "seed": 2026,
+  "model_sha256": "9e9f7c9795673d1ba4f7888ec96be000750f8a441bbb760b586f93ff109433c5",
+  "hold_threshold": 7.867925257321986,
+  "block_threshold": 7.867925257321986,
+  "operating_points": {
+    "0.01": {
+      "target_false_alarm_rate": 0.01,
+      "quantile_bits": 7.867704775563579,
+      "threshold_bits": 7.86770477556358,
+      "n_actions": 10860,
+      "tied_at_quantile": 120,
+      "observed_false_alarm_rate": 0.008195211786372007,
+      "resolution": 9.208103130755064e-05,
+      "method": "empirical upper quantile; next float above selected score makes >= comparison conservative across exact ties; no guarantee on future data"
+    },
+    "0.001": {
+      "target_false_alarm_rate": 0.001,
+      "quantile_bits": 7.8679252573219856,
+      "threshold_bits": 7.867925257321986,
+      "n_actions": 10860,
+      "tied_at_quantile": 89,
+      "observed_false_alarm_rate": 0.0,
+      "resolution": 9.208103130755064e-05,
+      "method": "empirical upper quantile; next float above selected score makes >= comparison conservative across exact ties; no guarantee on future data"
+    },
+    "0.0001": {
+      "target_false_alarm_rate": 0.0001,
+      "quantile_bits": 7.8679252573219856,
+      "threshold_bits": 7.867925257321986,
+      "n_actions": 10860,
+      "tied_at_quantile": 89,
+      "observed_false_alarm_rate": 0.0,
+      "resolution": 9.208103130755064e-05,
+      "method": "empirical upper quantile; next float above selected score makes >= comparison conservative across exact ties; no guarantee on future data"
+    }
+  },
+  "limits": "Empirical synthetic calibration does not establish a real-world false alarm guarantee; ties handled conservatively; sample resolution reported."
+}

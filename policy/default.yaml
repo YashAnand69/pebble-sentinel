@@ -1,0 +1,46 @@
+version: 1
+rules:
+  - id: deny-guard-tamper
+    verdict: deny
+    verbs: [write, edit, delete]
+    objects: [guard-config]
+  - id: deny-secret-read-tainted
+    verdict: deny
+    verbs: [read]
+    objects: [secret-store]
+    tainted: true
+  - id: deny-secret-then-send
+    verdict: deny
+    verbs: [send]
+    objects: [net-unknown]
+    secret_seen: true
+  - id: deny-persistence-tainted
+    verdict: deny
+    verbs: [write, edit]
+    objects: [shell-rc, cron-entry, agent-config]
+    tainted: true
+  - id: hold-remote-code
+    verdict: hold
+    flags_any: [remote-code]
+  - id: hold-downloaded-code
+    verdict: hold
+    verbs: [exec]
+    objects: [downloaded-code]
+  - id: hold-sudo
+    verdict: hold
+    flags_any: [sudo]
+  - id: hold-new-host-send
+    verdict: hold
+    verbs: [send]
+    flags_any: [new-host]
+  - id: hold-unknown
+    verdict: hold
+    objects: [unknown-object, unknown-binary]
+  - id: hold-destructive-outside
+    verdict: hold
+    verbs: [delete]
+    flags_any: [outside-cwd, bulk]
+  - id: hold-interpreter-content
+    verdict: hold
+    verbs: [exec]
+    objects: [interpreter]

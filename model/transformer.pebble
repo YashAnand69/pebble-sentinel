@@ -1,0 +1,47 @@
+export const config = {vocab: 51, context: 256, width: 144, heads: 4, layers: 5, expansion: 576};
+
+class Block {
+  fn init(index, settings) {
+    const width = settings.width;
+    const residualScale = 0.02 / sqrt(2 * settings.layers);
+    this.heads = settings.heads;
+    this.qkv = ml.parameter("block" + str(index) + ".qkv", [3 * width, width]);
+    this.attentionOut = ml.parameter("block" + str(index) + ".attention", [width, width], residualScale);
+    this.expand = ml.parameter("block" + str(index) + ".expand", [settings.expansion, width]);
+    this.project = ml.parameter("block" + str(index) + ".project", [width, settings.expansion], residualScale);
+    this.parameters = [this.qkv, this.attentionOut, this.expand, this.project];
+  }
+  fn forward(input) {
+    const normalized = ml.layerNorm(input);
+    const qkv = ml.linear(normalized, this.qkv);
+    const attention = ml.attention(qkv, this.heads);
+    const residual = ml.add(input, ml.linear(attention, this.attentionOut));
+    const expanded = ml.gelu(ml.linear(ml.layerNorm(residual), this.expand));
+    return ml.add(residual, ml.linear(expanded, this.project));
+  }
+}
+
+export class Transformer {
+  fn init(settings = config) {
+    this.config = settings;
+    this.tokens = ml.parameter("tokens", [settings.vocab, settings.width]);
+    this.positions = ml.parameter("positions", [settings.context, settings.width]);
+    this.blocks = [];
+    this.parameters = [this.tokens, this.positions];
+    for index in range(settings.layers) {
+      const block = Block(index, settings);
+      this.blocks.push(block);
+      this.parameters += block.parameters;
+    }
+  }
+  fn forward(ids) {
+    const batch = ids.shape[0];
+    const length = ids.shape[1];
+    assert(length <= this.config.context, "Input exceeds the context window");
+    let hidden = ml.add(ml.embedding(this.tokens, ids), ml.embedding(this.positions, ml.positions(batch, length)));
+    for block in this.blocks { hidden = block.forward(hidden); }
+    return ml.linear(ml.layerNorm(hidden), this.tokens);
+  }
+  fn loss(ids, targets) { return ml.crossEntropy(this.forward(ids), targets); }
+  fn count() { return ml.count(this.parameters); }
+}

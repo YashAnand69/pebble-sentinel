@@ -1,0 +1,55 @@
+{
+  "version": 2,
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "web/dist",
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 60,
+      "includeFiles": "{sentinel/**,policy/**,scenarios/**,workflows/**,model/**,results/**}",
+      "excludeFiles": "{web/**,model/node_modules/**,model/data/**,model/reports/**,tests/**,docs/**,.github/**,.superdesign/**}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/scenarios",
+      "destination": "/api/index?route=scenarios"
+    },
+    {
+      "source": "/api/vocabulary",
+      "destination": "/api/index?route=vocabulary"
+    },
+    {
+      "source": "/api/evaluate",
+      "destination": "/api/index?route=evaluate"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/index?route=health"
+    },
+    {
+      "source": "/api/simulate",
+      "destination": "/api/index?route=simulate"
+    },
+    {
+      "source": "/api/check",
+      "destination": "/api/index?route=check"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ],
+  "installCommand": "npm ci"
+}

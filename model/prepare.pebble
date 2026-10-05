@@ -1,0 +1,29 @@
+import { Tokenizer } from "./tokenizer.pebble";
+ml.seed(20261005);
+const tokenizer = Tokenizer();
+const workflows = parseJSON(io.readText("workflows.json"));
+fn generate(templates, count) {
+ let episodes = [];
+ for index in range(count) {
+  const template = templates[index % len(templates)];
+  let actions = []; let tokens = [tokenizer.bos]; let tainted = false;
+  const repetitions = 2 + ml.randint(4);
+  for repeat in range(repetitions) {
+   for original in template.actions {
+    let sentence = original.replace(" tainted", "");
+    if (tainted) { sentence = sentence.replace(" .", " tainted ."); }
+    actions.push(sentence); tokens += tokenizer.encode(sentence);
+    if (sentence.startsWith("fetch ") || sentence.includes(" via mcp")) { tainted = true; }
+   }
+  }
+  tokens.push(tokenizer.eos);
+  episodes.push({id: template.id + "-" + str(index), template: template.id, actions, tokens});
+ }
+ return episodes;
+}
+for shard in range(8) { io.writeText("data/train-"+str(shard)+".json",stringifyJSON(generate(workflows.train,32))); }
+io.writeText("data/validation.json",stringifyJSON(generate(workflows.validation,36)));
+for shard in range(24) { io.writeText("data/calibration-"+str(shard)+".json",stringifyJSON(generate(workflows.validation,30))); }
+for shard in range(16) { io.writeText("data/test-"+str(shard)+".json",stringifyJSON(generate(workflows.test,30))); }
+io.writeText("data/manifest.json",stringifyJSON({seed:20261005,license:"MIT",source:"Original synthetic PAL workflows",splitBy:"workflow template ID",trainEpisodes:256,validationEpisodes:36,calibrationEpisodes:720,testEpisodes:480}));
+print("Generated benign workflows only: 256 train, 36 early stopping, 720 calibration, 480 test episodes");

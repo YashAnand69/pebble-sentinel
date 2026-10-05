@@ -1,0 +1,269 @@
+{
+  "train": [
+    {
+      "id": "train-01",
+      "actions": [
+        "read proj-file via file-tool .",
+        "edit proj-file via file-tool .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "train-02",
+      "actions": [
+        "read proj-config via file-tool .",
+        "read proj-file via file-tool .",
+        "exec build-tool via shell .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "train-03",
+      "actions": [
+        "exec vcs via shell .",
+        "read proj-file via file-tool .",
+        "edit proj-file via file-tool .",
+        "exec test-runner via shell .",
+        "exec vcs via shell ."
+      ]
+    },
+    {
+      "id": "train-04",
+      "actions": [
+        "read proj-file via file-tool .",
+        "write tmp-file via file-tool .",
+        "exec interpreter via shell .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "train-05",
+      "actions": [
+        "read proj-file via file-tool .",
+        "write proj-file via file-tool .",
+        "exec test-runner via shell .",
+        "exec build-tool via shell ."
+      ]
+    },
+    {
+      "id": "train-06",
+      "actions": [
+        "read proj-config via file-tool .",
+        "exec pkg-manager via shell .",
+        "exec build-tool via shell .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "train-07",
+      "actions": [
+        "fetch net-allow via web-tool .",
+        "read proj-file via file-tool tainted .",
+        "edit proj-file via file-tool tainted .",
+        "exec test-runner via shell tainted ."
+      ]
+    },
+    {
+      "id": "train-08",
+      "actions": [
+        "fetch net-allow via web-tool .",
+        "read proj-file via file-tool tainted .",
+        "exec build-tool via shell tainted .",
+        "exec test-runner via shell tainted ."
+      ]
+    },
+    {
+      "id": "train-09",
+      "actions": [
+        "read proj-file via file-tool .",
+        "fetch net-local via web-tool .",
+        "read proj-file via file-tool tainted .",
+        "exec test-runner via shell tainted ."
+      ]
+    },
+    {
+      "id": "train-10",
+      "actions": [
+        "read proj-config via file-tool .",
+        "exec vcs via shell .",
+        "read proj-file via file-tool .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "train-11",
+      "actions": [
+        "read proj-file via file-tool .",
+        "exec interpreter via shell .",
+        "write tmp-file via file-tool .",
+        "read proj-file via file-tool .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "train-12",
+      "actions": [
+        "read skill-file via file-tool .",
+        "read proj-file via file-tool .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "train-13",
+      "actions": [
+        "fetch pkg-registry via web-tool .",
+        "exec pkg-manager via shell tainted .",
+        "exec test-runner via shell tainted .",
+        "exec build-tool via shell tainted ."
+      ]
+    },
+    {
+      "id": "train-14",
+      "actions": [
+        "read proj-file via file-tool .",
+        "spawn unknown-object via mcp .",
+        "read proj-file via file-tool tainted .",
+        "exec test-runner via shell tainted ."
+      ]
+    },
+    {
+      "id": "train-15",
+      "actions": [
+        "read proj-config via file-tool .",
+        "read proj-file via file-tool .",
+        "write proj-file via file-tool .",
+        "exec build-tool via shell ."
+      ]
+    },
+    {
+      "id": "train-16",
+      "actions": [
+        "read proj-file via file-tool .",
+        "edit proj-file via file-tool .",
+        "read proj-file via file-tool .",
+        "exec test-runner via shell .",
+        "exec build-tool via shell ."
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "id": "validation-01",
+      "actions": [
+        "read proj-file via file-tool .",
+        "exec test-runner via shell .",
+        "edit proj-file via file-tool .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "validation-02",
+      "actions": [
+        "read proj-config via file-tool .",
+        "exec build-tool via shell .",
+        "read proj-file via file-tool .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "validation-03",
+      "actions": [
+        "exec vcs via shell .",
+        "read proj-file via file-tool .",
+        "exec test-runner via shell .",
+        "exec vcs via shell ."
+      ]
+    },
+    {
+      "id": "validation-04",
+      "actions": [
+        "fetch net-allow via web-tool .",
+        "read proj-file via file-tool tainted .",
+        "exec test-runner via shell tainted .",
+        "edit proj-file via file-tool tainted .",
+        "exec test-runner via shell tainted ."
+      ]
+    },
+    {
+      "id": "validation-05",
+      "actions": [
+        "read proj-file via file-tool .",
+        "write tmp-file via file-tool .",
+        "read proj-file via file-tool .",
+        "exec interpreter via shell .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "validation-06",
+      "actions": [
+        "fetch pkg-registry via web-tool .",
+        "read proj-file via file-tool tainted .",
+        "exec build-tool via shell tainted .",
+        "exec test-runner via shell tainted ."
+      ]
+    }
+  ],
+  "test": [
+    {
+      "id": "test-01",
+      "actions": [
+        "read proj-config via file-tool .",
+        "read proj-file via file-tool .",
+        "exec test-runner via shell .",
+        "edit proj-file via file-tool .",
+        "exec build-tool via shell ."
+      ]
+    },
+    {
+      "id": "test-02",
+      "actions": [
+        "exec vcs via shell .",
+        "read proj-config via file-tool .",
+        "read proj-file via file-tool .",
+        "exec build-tool via shell .",
+        "exec test-runner via shell .",
+        "exec vcs via shell ."
+      ]
+    },
+    {
+      "id": "test-03",
+      "actions": [
+        "read proj-file via file-tool .",
+        "write proj-file via file-tool .",
+        "read proj-file via file-tool .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "test-04",
+      "actions": [
+        "fetch net-allow via web-tool .",
+        "read proj-file via file-tool tainted .",
+        "edit proj-file via file-tool tainted .",
+        "exec build-tool via shell tainted .",
+        "exec test-runner via shell tainted ."
+      ]
+    },
+    {
+      "id": "test-05",
+      "actions": [
+        "read proj-file via file-tool .",
+        "exec interpreter via shell .",
+        "read proj-file via file-tool .",
+        "write tmp-file via file-tool .",
+        "exec test-runner via shell ."
+      ]
+    },
+    {
+      "id": "test-06",
+      "actions": [
+        "read proj-config via file-tool .",
+        "exec pkg-manager via shell .",
+        "read proj-file via file-tool .",
+        "exec test-runner via shell .",
+        "exec build-tool via shell ."
+      ]
+    }
+  ]
+}

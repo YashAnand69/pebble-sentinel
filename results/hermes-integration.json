@@ -1,0 +1,31 @@
+{
+  "upstream_commit": "bdef06de3b8c0d190cd7f69edc911ac6961ca358",
+  "upstream": "https://github.com/NousResearch/hermes-agent",
+  "actual_components": [
+    "PluginManager",
+    "PluginContext.register_hook",
+    "get_pre_tool_call_directive",
+    "model_tools.handle_function_call",
+    "ToolRegistry.dispatch",
+    "approval directive resolver"
+  ],
+  "block": {
+    "directive": "block",
+    "dummy_callback_runs": 0,
+    "result_has_error": true
+  },
+  "hold": {
+    "directive": "approve",
+    "human_gate_called": true,
+    "human_declined_dummy_callback_runs": 0,
+    "result_has_error": true
+  },
+  "approved_hold": {
+    "dummy_callback_runs": 1,
+    "result": {
+      "ok": true,
+      "fixture": "no side effects"
+    }
+  },
+  "boundary": "Fresh upstream source, isolated HERMES_HOME, direct real tool routing. Human gate fixture replaced request_tool_approval; dummy tools only. No model API, real shell command, real credentials, global plugin installation, or user Hermes configuration."
+}

@@ -1,0 +1,1 @@
+{"seed":20261005,"license":"MIT","source":"Original synthetic PAL workflows","splitBy":"workflow template ID","trainEpisodes":256,"validationEpisodes":36,"calibrationEpisodes":720,"testEpisodes":480}

@@ -1,0 +1,26 @@
+export fn makeBatch(examples, size, length) {
+ let ids = []; let targets = [];
+ for row in range(size) {
+  let position = 0;
+  while (position < length) {
+   const tokens = examples[ml.randint(len(examples))].tokens;
+   for index in range(len(tokens) - 1) {
+    if (position >= length) { break; }
+    ids.push(tokens[index]); targets.push(tokens[index + 1]); position++;
+   }
+  }
+ }
+ return {ids: ml.tensor(ids,[size,length],"int32"),targets:ml.tensor(targets,[size,length],"int32")};
+}
+export fn evaluateLoss(model, examples) {
+ let total = 0;
+ for example in examples {
+  total += ml.scope(fn() {
+   let ids = []; let targets = [];
+   const length = min(256,len(example.tokens)-1);
+   for index in range(length) { ids.push(example.tokens[index]); targets.push(example.tokens[index+1]); }
+   return ml.item(model.loss(ml.tensor(ids,[1,length],"int32"),ml.tensor(targets,[1,length],"int32")));
+  });
+ }
+ return total / len(examples);
+}
