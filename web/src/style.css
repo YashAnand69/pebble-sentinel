@@ -3190,3 +3190,64 @@ html.motion-disabled .scene-light {
 }
 
 .scroll-reveal:focus-within{opacity:1!important;transform:none!important;transition:none!important}
+
+/* Ecosystem rhythm: quiet surfaces, clear actions, restrained depth. */
+:root {
+  --paper: #f0f3ec;
+  --surface-raised: #141e18;
+  --radius-control: 12px;
+  --radius-panel: 20px;
+  --motion-feedback: 140ms;
+  --motion-enter: 240ms;
+  --motion-ease: cubic-bezier(.2,.8,.2,1);
+}
+body { background: radial-gradient(ellipse at 78% 8%, #a9ef8808, transparent 42%), #0b100e; }
+.hero h1 { text-wrap: balance; }
+.hero-detail { max-width: 49ch; }
+.nav { min-height: 88px; }
+.ecosystem-bar { border-bottom-color: #a9ef881f; }
+.ecosystem-bar > div > a { border-radius: var(--radius-control); min-height: 40px; }
+.button, .nav-github, .console-tabs button, .composer-presets button, select, input:not([type="checkbox"]) { border-radius: var(--radius-control); }
+.console, .use-case-grid > article, .mission-card, .evidence-results, .limits, .ecosystem-cards > a { border-radius: var(--radius-panel); }
+.console { box-shadow: 0 20px 64px #00000024; overflow: hidden; }
+.use-case-grid > article, .ecosystem-cards > a { background: linear-gradient(145deg, #17231b, #101812); }
+.mission-card { min-height: 112px; }
+button, .button, .nav-github, .ecosystem-bar a, .mission-card, .ecosystem-cards > a {
+  transition: transform var(--motion-feedback) var(--motion-ease), opacity var(--motion-feedback) var(--motion-ease);
+}
+button:active:not(:disabled), .button:active { transform: translateY(1px) scale(.99); }
+textarea:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
+.panel-arrival, .decision-arrival, .record-arrival { animation-duration: var(--motion-enter); animation-timing-function: var(--motion-ease); }
+.scroll-reveal { transition-duration: 320ms; transition-timing-function: var(--motion-ease); }
+.scroll-reveal[data-reveal-state="pending"] { transform: translate3d(0,12px,0); }
+.shield-stack { transform: rotateX(calc(17deg + var(--scroll) * 6deg + var(--pointer-y) * -3deg)) rotateY(calc(-29deg + var(--scroll) * 12deg + var(--pointer-x) * 5deg)) rotateZ(calc(-12deg + var(--scroll) * 2deg)); }
+.scene-light { transform: translate3d(calc(var(--pointer-x) * 28px),calc(var(--pointer-y) * 20px),0); }
+.trace-empty { padding: 48px 28px; }
+.trace-empty p { max-width: 40ch; margin-inline: auto; }
+.trace-empty.is-pending .empty-rings { opacity: .6; }
+.error-message, .inline-error { border-radius: var(--radius-control); line-height: 1.6; }
+.service-status { min-height: 28px; }
+.benchmark-controls select { min-height: 44px; }
+.benchmark-table { font-variant-numeric: tabular-nums; }
+@media (hover:hover) and (pointer:fine) {
+  .ecosystem-cards > a:hover, .mission-card:hover:not(:disabled) { transform: translateY(-3px); }
+  .nav-github:hover { transform: translateY(-1px); }
+}
+@media (max-width:760px) {
+  .ecosystem-bar > div > a { min-height: 44px; padding-inline: 12px; }
+  .nav { padding-inline: 20px; }
+  .console { border-radius: 16px; }
+  .trace-empty { padding: 36px 20px; }
+  .hero-actions { gap: 20px; }
+  .hero-actions .button { min-height: 48px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  button:active:not(:disabled), .button:active, .ecosystem-cards > a:hover, .mission-card:hover:not(:disabled), .nav-github:hover { transform: none; }
+  .shield-stack { transform: rotateX(17deg) rotateY(-29deg) rotateZ(-12deg); }
+  .scene-light { transform: none; }
+}
+html.motion-disabled button:active, html.motion-disabled a:hover, html.motion-disabled .mission-card:hover { transform: none; }
+@keyframes decision-arrive {
+  from { opacity: .65; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,43 @@
+/* Identical family motion across independently deployed Pebble products. */
+:root {
+  --pebble-ease: cubic-bezier(.2, .8, .2, 1);
+  --pebble-feedback: 140ms;
+  --pebble-enter: 240ms;
+}
+.pebble-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  overflow: hidden;
+  contain: strict;
+  background: #e9eee6;
+  animation: pebble-wash-out 360ms var(--pebble-ease) both;
+}
+.pebble-transition.is-leaving { animation: pebble-wash-in 140ms var(--pebble-ease) both; }
+.pebble-transition.is-sentinel { background: transparent; }
+.pebble-transition-pigment { display: none; }
+.is-sentinel .pebble-transition-pigment {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: min(64vw, 640px);
+  aspect-ratio: 1;
+  border-radius: 43% 57% 62% 38% / 49% 39% 61% 51%;
+  background: #8fae78;
+  box-shadow: 20px -14px 0 -9px #687f59, -24px 18px 0 -15px #a8be8d;
+  opacity: .22;
+  transform: translate(-50%, -50%) scale(.04);
+  animation: pebble-pigment-impact 420ms var(--pebble-ease) both;
+}
+@keyframes pebble-wash-out { from { opacity: .65; } to { opacity: 0; } }
+@keyframes pebble-wash-in { from { opacity: 0; } to { opacity: .25; } }
+@keyframes pebble-pigment-impact {
+  0% { transform: translate(-50%, -50%) scale(.04) rotate(-8deg); opacity: 0; }
+  24% { opacity: .24; }
+  65% { opacity: .16; }
+  100% { transform: translate(-50%, -50%) scale(1.5) rotate(0); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .pebble-transition { display: none; } }
+html[data-motion="off"] .pebble-transition { display: none; }

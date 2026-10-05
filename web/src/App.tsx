@@ -421,7 +421,9 @@ function App() {
     [serviceStatus, setServiceStatus] = useState<
       "checking" | "ready" | "unavailable"
     >("checking"),
-    [manualReducedMotion, setManualReducedMotion] = useState(false),
+    [manualReducedMotion, setManualReducedMotion] = useState(() => {
+      try { return localStorage.getItem("pebble-motion") === "off"; } catch { return false; }
+    }),
     [systemReducedMotion, setSystemReducedMotion] = useState(
       () => matchMedia("(prefers-reduced-motion: reduce)").matches,
     ),
@@ -438,8 +440,11 @@ function App() {
   const launchScroll = useRef(false);
   useEffect(() => {
     document.documentElement.classList.toggle("motion-disabled", reducedMotion);
+    document.documentElement.dataset.motion = reducedMotion ? "off" : "on";
+    try { localStorage.setItem("pebble-motion", manualReducedMotion ? "off" : "on"); } catch { /* Storage may be disabled. */ }
+    window.dispatchEvent(new Event("pebble-motion-change"));
     return () => document.documentElement.classList.remove("motion-disabled");
-  }, [reducedMotion]);
+  }, [reducedMotion, manualReducedMotion]);
   useEffect(() => {
     let alive = true;
     request("/api/health")
@@ -1420,22 +1425,21 @@ function App() {
                   </>
                 )}
               </aside>
-              <div className="trace-area" aria-live="polite">
+              <div className="trace-area" aria-live="polite" aria-busy={pending}>
                 {error && (
                   <div className="error-message" role="alert">
                     {error}
                   </div>
                 )}
                 {!report ? (
-                  <div className="trace-empty">
+                  <div className={`trace-empty ${pending ? "is-pending" : ""}`}>
                     <div className="empty-rings">
                       <ShieldCheck />
                     </div>
-                    <span className="mono-label">WAITING FOR AN ACTION</span>
-                    <h3>A decision should leave a trail.</h3>
+                    <span className="mono-label">{pending ? "SCORING THE SEQUENCE" : "WAITING FOR AN ACTION"}</span>
+                    <h3>{pending ? "Following the action trail." : "A decision should leave a trail."}</h3>
                     <p>
-                      Run a scenario to see the sequence, the signal, and the
-                      exact reason behind every boundary.
+                      {pending ? "The model and transparent policy are reviewing each action. Your results will appear here." : "Run a scenario to see the sequence, the signal, and the exact reason behind every boundary."}
                     </p>
                     <div className="empty-legend">
                       <Status value="allow" />
