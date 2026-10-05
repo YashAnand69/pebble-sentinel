@@ -1,5 +1,8 @@
 # Pebble Sentinel
 
+[Pebble repo](https://github.com/YashAnand69/pebble)
+[Pebble LM](https://github.com/YashAnand69/pebble-LM)
+
 **[Pebble ecosystem](https://pebble-peach-kappa.vercel.app/?view=ecosystem)** · [Language Studio](https://pebble-peach-kappa.vercel.app/?view=studio) · [PebbleLM](https://pebble-llm.vercel.app/) · [Sentinel](https://pebble-sentinel.vercel.app/)
 
 [Use cases and integrated journeys](docs/ECOSYSTEM.md)
