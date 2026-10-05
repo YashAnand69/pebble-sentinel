@@ -308,3 +308,22 @@
   border-radius: 6px;
   padding: 8px 10px;
 }
+
+/* Light work surfaces share the ecosystem's tactile controls. */
+.daily-workspace { background: var(--paper, #f0f3ec); }
+.daily-panel { box-shadow: 0 8px 28px #233d3406; }
+.daily-workspace button, .daily-label input, .daily-label textarea, .daily-file input { border-radius: var(--radius-control, 12px); }
+.daily-workspace button { min-height: 44px; }
+.daily-label input { min-height: 44px; }
+.daily-file input::file-selector-button { border: 0; border-radius: 8px; padding: 8px 12px; margin-right: 12px; background: #dce7d7; color: #294737; font: inherit; cursor: pointer; }
+.daily-status { animation: panel-arrive var(--motion-enter, 240ms) var(--motion-ease, ease-out); }
+.daily-presets button.selected { box-shadow: 0 2px 8px #29473715; }
+.daily-help { line-height: 1.65; }
+.daily-error { padding: 12px 16px; border: 1px solid #dfbbb0; border-radius: 12px; background: #f7e7e2; }
+.daily-local-tools { gap: 8px; }
+.daily-local-tools button { min-height: 40px; }
+@media (max-width:760px) {
+  .daily-panel { padding: 24px 20px; }
+  .daily-primary { width: 100%; justify-content: center; }
+  .daily-approval button { margin-block: 4px; }
+}
