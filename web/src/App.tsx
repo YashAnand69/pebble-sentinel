@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { parseAudit } from "./audit";
 import Evaluation from "./Evaluation";
+import DailyWorkspace from "./DailyWorkspace";
 import { parseLaunch, summarizeRun } from "./lab";
 import { useScrollReveals } from "./useScrollReveals";
 import {
@@ -628,6 +629,7 @@ function App() {
           </span>
         </a>
         <nav aria-label="Main navigation">
+          <a href="#daily-workspace">Daily workspace</a>
           <a href="#use-cases">Use cases</a>
           <a href="#architecture">How it works</a>
           <a href="#playground">Guard lab</a>
@@ -658,16 +660,16 @@ function App() {
               what stops.
             </p>
             <div className="hero-actions">
-              <a className="button primary" href="#playground">
-                Open the guard lab <ArrowRight size={16} />
+              <a className="button primary" href="#daily-workspace">
+                Use the daily workspace <ArrowRight size={16} />
               </a>
-              <a className="text-link" href="#architecture">
-                Meet the guard <ChevronDown size={15} />
+              <a className="text-link" href="#playground">
+                Explore the guard lab <ChevronDown size={15} />
               </a>
             </div>
             <div className="hero-footnote">
-              <LockKeyhole size={12} /> Safe canary scenarios. No commands
-              executed here.
+              <LockKeyhole size={12} /> Files stay on your device. No shell
+              commands run here.
             </div>
           </div>
           <ShieldScene reduced={reducedMotion} />
@@ -884,6 +886,7 @@ function App() {
             </article>
           </div>
         </section>
+        <DailyWorkspace />
         <section className="playground section" id="playground">
           <div className="section-heading">
             <div>

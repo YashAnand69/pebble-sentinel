@@ -15,7 +15,8 @@ class handler(BaseHTTPRequestHandler):
     def respond(self, method):
         try:
             url = urlparse(self.path)
-            route = parse_qs(url.query).get('route', [url.path.rsplit('/', 1)[-1]])[0]
+            fallback = 'workspace-check' if url.path == '/api/workspace/check' else url.path.rsplit('/', 1)[-1]
+            route = parse_qs(url.query).get('route', [fallback])[0]
             payload = None
             if method == 'POST':
                 length = int(self.headers.get('Content-Length', '0'))

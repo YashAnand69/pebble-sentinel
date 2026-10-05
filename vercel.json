@@ -12,6 +12,10 @@
   },
   "rewrites": [
     {
+      "source": "/api/workspace/check",
+      "destination": "/api/index?route=workspace-check"
+    },
+    {
       "source": "/api/scenarios",
       "destination": "/api/index?route=scenarios"
     },

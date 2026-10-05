@@ -5,6 +5,7 @@ import threading
 from .simulation import list_scenarios, run_simulation, evaluate_actions
 from .engine import VERBS, OBJECTS, CHANNELS
 from .encoder import FLAG_ORDER
+from .daily_service import check_workspace
 
 ROOT = Path(__file__).resolve().parent.parent
 SCORER = None
@@ -47,12 +48,16 @@ def dispatch(route, method='GET', payload=None):
         with MODEL_LOCK:
             scorer = model_scorer()
             return 200, {'status': 'ready', 'product': 'Pebble Sentinel', 'model': model_info(scorer), 'hosted_scope': 'simulation and analysis only; no visitor tools executed'}
-    if route not in ('simulate', 'check'):
+    if route not in ('simulate', 'check', 'workspace-check'):
         return 404, {'error': 'Unknown endpoint.'}
     if method != 'POST':
         return 405, {'error': 'This endpoint requires POST.'}
     if not isinstance(payload, dict):
         return 400, {'error': 'Request must be a JSON object.'}
+    if route == 'workspace-check':
+        with MODEL_LOCK:
+            scorer = model_scorer()
+            return check_workspace(payload, scorer, model_info(scorer))
     mode = payload.get('mode', 'enforce')
     if mode not in ('learn', 'shadow', 'enforce'):
         return 400, {'error': 'Choose learn, shadow or enforce mode.'}

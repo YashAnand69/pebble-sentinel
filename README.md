@@ -27,12 +27,27 @@ python3 -m venv .venv
 
 The local-effect demo uses only a temporary fake credential and a localhost sink. Enforce prevents its delivery; shadow records the recommendation while allowing the synthetic demonstration. No scenario shell command is executed. See [integration instructions](docs/core.md) for a real tool harness, Hermes hooks and the MCP JSON-RPC gate.
 
+## Use Sentinel for daily work
+
+**[Open the Daily Workspace](https://pebble-sentinel.vercel.app/#daily-workspace)** · [Setup and agent integration guide](docs/DAILY_USE.md)
+
+Select a local text document, check before opening it, copy or format it into a draft, and check before downloading your reviewed notes or report. Files and draft text stay in your browser tab; the API receives only typed action classes. Holds require one-time human approval; hard blocks cannot be overridden. This is a usable manual document workflow, not AI summarization or a device-wide guard.
+
+For an actual assistant's file tools, the local `DailyWorkspace` reference integration pins one operator-selected folder, defaults to read-only, and checks before real read/write callbacks. Run a harmless temporary demonstration:
+
+```sh
+.venv/bin/python examples/daily_workspace.py --demo
+```
+
+The daily pilot holds model anomalies while retaining hard policy restrictions; the default guard, model weights, and published benchmark results are unchanged. See the guide for opt-in writes, approval, audit boundaries, and known false alarms.
+
 ## What is built
 
 - Closed Pebble Action Language encodings for shell, file, network, skill and MCP effects, including compound calls.
 - Persistent session taint and secret exposure beyond the model's 256-token context; conservative handling of parallel calls and untrusted error output.
 - Explicit policy rules, calibrated anomaly scoring, human approval, fail-safe holds and non-overridable blocks in the adapters.
 - Redacted hash-chained local audit logs and a browser-only audit viewer.
+- Daily browser workspace and a scoped local file-tool reference integration.
 - CLI, local harness, Hermes plugin hooks and a transport-independent MCP gate with durable session ledgers.
 - Three genuinely trained **1,288,368-parameter** PAL Transformers; original data, weights, reports, parity checks and reproducible Pebble training code.
 
