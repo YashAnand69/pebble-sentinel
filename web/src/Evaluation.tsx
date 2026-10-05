@@ -82,7 +82,7 @@ export default function Evaluation({ data }: { data: Json }) {
               </select>
             </label>
           </div>
-          <div className="benchmark-scroll">
+          <div className="benchmark-scroll" tabIndex={0} role="region" aria-label="Measured benchmark comparison, scroll horizontally on small screens">
             <table className="benchmark-table">
               <caption>
                 Flags before the harmful action in authored scenarios

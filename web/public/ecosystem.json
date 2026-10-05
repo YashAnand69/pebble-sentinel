@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "name": "Pebble ecosystem",
+  "home": "https://pebble-peach-kappa.vercel.app/?view=ecosystem",
+  "license": "MIT",
+  "products": [
+    {
+      "id": "language",
+      "name": "Pebble",
+      "role": "Write and understand programs",
+      "url": "https://pebble-peach-kappa.vercel.app/?view=studio",
+      "repository": "https://github.com/YashAnand69/pebble",
+      "use_cases": [
+        "Learn programming with runnable examples and execution traces",
+        "Prototype small algorithms and data transformations",
+        "Define and train models with the optional local ML runtime"
+      ]
+    },
+    {
+      "id": "model",
+      "name": "PebbleLM",
+      "role": "Explore how a small model learns",
+      "url": "https://pebble-llm.vercel.app/",
+      "repository": "https://github.com/YashAnand69/pebble-llm",
+      "parameters": 2000000,
+      "use_cases": [
+        "Compare learned questions with unseen phrasings",
+        "Explore how sampling changes character generation",
+        "Reproduce a complete small Transformer training experiment"
+      ]
+    },
+    {
+      "id": "sentinel",
+      "name": "Pebble Sentinel",
+      "role": "Inspect agent actions before execution",
+      "url": "https://pebble-sentinel.vercel.app/",
+      "repository": "https://github.com/YashAnand69/pebble-sentinel",
+      "parameters": 1288368,
+      "use_cases": [
+        "Add a pre-execution approval gate to an AI tool harness",
+        "Replay suspicious skill and prompt-injection action chains safely",
+        "Inspect redacted decision audits locally"
+      ]
+    }
+  ],
+  "boundary": "PebbleLM and Sentinel use separate trained models. Hosted demos do not install a guard or run visitor shell commands. Browser Studio does not train models."
+}

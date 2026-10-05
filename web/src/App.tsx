@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { parseAudit } from "./audit";
 import Evaluation from "./Evaluation";
+import { parseLaunch, summarizeRun } from "./lab";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -48,6 +49,49 @@ type Event = {
 };
 type Report = { events: Event[]; [key: string]: unknown };
 const repo = "https://github.com/YashAnand69/pebble-sentinel";
+const familyNames: Record<string, string> = {
+  benign: "Normal workflow",
+  F1: "Secret exfiltration",
+  F2: "Downloaded code",
+  F3: "Persistence",
+  F4: "Destructive sweep",
+  F5: "Slow-drip sending",
+};
+const objectNames: Record<string, string> = {
+  "proj-file": "Project file",
+  "proj-config": "Project settings",
+  "home-dotfile": "Home settings",
+  "secret-store": "Credentials / private keys",
+  "shell-rc": "Shell startup file",
+  "cron-entry": "Scheduled job",
+  "agent-config": "Agent configuration",
+  "guard-config": "Guard configuration",
+  "tmp-file": "Temporary file",
+  "skill-file": "Installed skill",
+  "system-path": "Operating-system path",
+  "test-runner": "Test runner",
+  "build-tool": "Build tool",
+  vcs: "Version control",
+  "pkg-manager": "Package manager",
+  interpreter: "Language interpreter",
+  "downloaded-code": "Downloaded code",
+  "unknown-binary": "Unknown executable",
+  "net-local": "Local destination",
+  "net-allow": "Allowed destination",
+  "net-unknown": "Unknown destination",
+  "pkg-registry": "Package registry",
+  "unknown-object": "Unclassified object",
+};
+const flagHelp: Record<string, string> = {
+  tainted: "After the agent has ingested untrusted output.",
+  sudo: "Requests elevated privileges.",
+  pipe: "Combines commands through a pipeline.",
+  encoded: "Carries an encoded payload.",
+  "remote-code": "Downloads or runs code from a remote source.",
+  bulk: "Affects many files or objects.",
+  "outside-cwd": "Targets outside the project directory.",
+  "new-host": "Contacts a destination not already recognized.",
+};
 const verbs = [
   "read",
   "write",
@@ -287,12 +331,16 @@ function ShieldScene({ reduced }: { reduced: boolean }) {
 function App() {
   const [scenarios, setScenarios] = useState<Scenario[]>([]),
     [scenario, setScenario] = useState(""),
-    [mode, setMode] = useState<Mode>("enforce"),
+    [mode, setMode] = useState<Mode>(
+      () => parseLaunch(window.location.search, []).mode,
+    ),
     [report, setReport] = useState<Report | null>(null),
     [selected, setSelected] = useState(0),
     [pending, setPending] = useState(false),
     [error, setError] = useState(""),
     [catalogError, setCatalogError] = useState(""),
+    [launchNotice, setLaunchNotice] = useState(""),
+    [shared, setShared] = useState(false),
     [source, setSource] = useState<"simulation" | "import" | "composed">(
       "simulation",
     ),
@@ -312,6 +360,11 @@ function App() {
       () => matchMedia("(prefers-reduced-motion: reduce)").matches,
     );
   const fileInput = useRef<HTMLInputElement>(null);
+  const launchScroll = useRef(false);
+  useEffect(() => {
+    document.documentElement.classList.toggle("motion-disabled", reducedMotion);
+    return () => document.documentElement.classList.remove("motion-disabled");
+  }, [reducedMotion]);
   useEffect(() => {
     let alive = true;
     request("/api/health")
@@ -322,7 +375,33 @@ function App() {
         if (!alive) return;
         const list = Array.isArray(data) ? data : (data.scenarios ?? []);
         setScenarios(list);
-        setScenario(list[0]?.id ?? "");
+        const launch = parseLaunch(
+          window.location.search,
+          list.map((item: Scenario) => item.id),
+        );
+        setScenario(launch.scenario ?? list[0]?.id ?? "");
+        if (launch.reviewedLink) {
+          setLaunchNotice(
+            "Shared mission selected. Nothing has run yet — choose Run replay when you are ready.",
+          );
+          if (!launchScroll.current) {
+            launchScroll.current = true;
+            requestAnimationFrame(() =>
+              document
+                .getElementById("playground")
+                ?.scrollIntoView({
+                  behavior: matchMedia("(prefers-reduced-motion: reduce)")
+                    .matches
+                    ? "auto"
+                    : "smooth",
+                }),
+            );
+          }
+        } else if (launch.rejectedScenario) {
+          setLaunchNotice(
+            "This link does not name a reviewed mission. Choose one below to continue safely.",
+          );
+        }
       })
       .catch((e) => alive && setCatalogError(e.message));
     request("/api/evaluate")
@@ -346,7 +425,45 @@ function App() {
         ),
       [events],
     ),
-    pageStart = Math.floor(selected / 100) * 100;
+    pageStart = Math.floor(selected / 100) * 100,
+    reportMode: Mode =
+      report?.mode === "learn" ||
+      report?.mode === "shadow" ||
+      report?.mode === "enforce"
+        ? report.mode
+        : mode,
+    outcome = useMemo(
+      () => summarizeRun(events, reportMode, source),
+      [events, reportMode, source],
+    );
+  function chooseMission(id: string) {
+    setScenario(id);
+    setPanel("replay");
+    setSource("simulation");
+    setReport(null);
+    setError("");
+    setLaunchNotice("");
+    setShared(false);
+  }
+  function openMission(id: string) {
+    chooseMission(id);
+    document
+      .getElementById("playground")
+      ?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth" });
+  }
+  async function shareMission() {
+    if (!scenarios.some((item) => item.id === scenario)) return;
+    const link = new URL("https://pebble-sentinel.vercel.app/");
+    link.searchParams.set("scenario", scenario);
+    link.searchParams.set("mode", mode);
+    try {
+      await navigator.clipboard.writeText(link.href);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    } catch {
+      setError("Your browser could not copy the mission link.");
+    }
+  }
   async function run() {
     setPending(true);
     setError("");
@@ -355,10 +472,12 @@ function App() {
         panel === "compose" ? "/api/check" : "/api/simulate",
         panel === "compose" ? { actions: composed, mode } : { scenario, mode },
       );
-      setReport(normalizeReport(data));
+      const normalized = normalizeReport(data);
+      const nextSource = panel === "compose" ? "composed" : "simulation";
+      setReport(normalized);
       if (data.model) setModel(data.model);
-      setSelected(0);
-      setSource(panel === "compose" ? "composed" : "simulation");
+      setSelected(summarizeRun(normalized.events, mode, nextSource).index);
+      setSource(nextSource);
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Unable to evaluate this scenario.",
@@ -418,6 +537,36 @@ function App() {
       <a className="skip-link" href="#playground">
         Skip to playground
       </a>
+      <nav className="ecosystem-bar" aria-label="Pebble ecosystem">
+        <a
+          className="ecosystem-home"
+          href="https://pebble-peach-kappa.vercel.app/?view=ecosystem"
+        >
+          <Stone small />
+          <span>PEBBLE ECOSYSTEM</span>
+        </a>
+        <div>
+          <a href="https://pebble-peach-kappa.vercel.app/">
+            <span>01</span> Language
+          </a>
+          <a href="https://pebble-llm.vercel.app">
+            <span>02</span> Model
+          </a>
+          <a
+            href="https://pebble-sentinel.vercel.app"
+            className="current"
+            aria-current="page"
+          >
+            <span>03</span> Sentinel
+          </a>
+        </div>
+        <a
+          className="ecosystem-overview"
+          href="https://pebble-peach-kappa.vercel.app/?view=ecosystem"
+        >
+          Explore the whole project <ArrowUpRight size={12} />
+        </a>
+      </nav>
       <header className="nav">
         <a className="brand" href="#">
           <Stone small />
@@ -427,8 +576,9 @@ function App() {
           </span>
         </a>
         <nav aria-label="Main navigation">
+          <a href="#use-cases">Use cases</a>
           <a href="#architecture">How it works</a>
-          <a href="#playground">Playground</a>
+          <a href="#playground">Guard lab</a>
           <a href="#evidence">Evidence</a>
         </nav>
         <a className="nav-github" href={repo} target="_blank" rel="noreferrer">
@@ -457,7 +607,7 @@ function App() {
             </p>
             <div className="hero-actions">
               <a className="button primary" href="#playground">
-                Replay an attack <ArrowRight size={16} />
+                Open the guard lab <ArrowRight size={16} />
               </a>
               <a className="text-link" href="#architecture">
                 Meet the guard <ChevronDown size={15} />
@@ -577,10 +727,117 @@ function App() {
             </article>
           </div>
         </section>
+        <section className="use-cases section" id="use-cases">
+          <div className="section-heading">
+            <div>
+              <div className="eyebrow">A TOOL BOUNDARY WITH A JOB TO DO</div>
+              <h2>
+                Useful where agents
+                <br />
+                can change things.
+              </h2>
+            </div>
+            <p>
+              Use Sentinel before a tool dispatches, not after damage occurs.
+              The hosted lab explains the decisions; a local adapter applies
+              them to your actual harness.
+            </p>
+          </div>
+          <div className="use-case-grid">
+            <article>
+              <Terminal size={22} />
+              <span className="mono-label">CODING AGENTS</span>
+              <h3>
+                Separate project work
+                <br />
+                from credential access.
+              </h3>
+              <p>
+                A documentation fetch can steer the next file read. Keep
+                ordinary edits moving and gate access to secret stores after
+                untrusted input.
+              </p>
+              <button
+                className="text-link"
+                onClick={() => openMission("injection-exfiltration")}
+              >
+                Inspect the poisoned-page chain <ArrowRight size={14} />
+              </button>
+              <a
+                href={`${repo}/blob/main/docs/core.md`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Wire the local tool gate <ArrowUpRight size={12} />
+              </a>
+            </article>
+            <article>
+              <Layers size={22} />
+              <span className="mono-label">SKILL WORKFLOWS</span>
+              <h3>
+                Review the action chain
+                <br />
+                before code runs.
+              </h3>
+              <p>
+                Watch install, download, and execution steps together. A runtime
+                gate supplements skill review; it does not certify that a
+                package is safe.
+              </p>
+              <button
+                className="text-link"
+                onClick={() => openMission("malicious-skill")}
+              >
+                Explore the helpful-skill scenario <ArrowRight size={14} />
+              </button>
+              <a
+                href={`${repo}/blob/main/THREAT_MODEL.md`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Understand the trust boundary <ArrowUpRight size={12} />
+              </a>
+            </article>
+            <article>
+              <ShieldCheck size={22} />
+              <span className="mono-label">MCP TOOL APPROVAL</span>
+              <h3>
+                Put approval between
+                <br />
+                intent and execution.
+              </h3>
+              <p>
+                Map MCP tools to known action classes, retain session history,
+                and ask a person when a tool call needs review. Unmapped tools
+                stay explicit unknowns.
+              </p>
+              <button
+                className="text-link"
+                onClick={() => {
+                  setPanel("compose");
+                  document
+                    .getElementById("playground")
+                    ?.scrollIntoView({
+                      behavior: reducedMotion ? "auto" : "smooth",
+                    });
+                }}
+              >
+                Compose a typed boundary test <ArrowRight size={14} />
+              </button>
+              <a
+                href={`${repo}/blob/main/docs/core.md`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Integrate the MCP gate <ArrowUpRight size={12} />
+              </a>
+            </article>
+          </div>
+        </section>
         <section className="playground section" id="playground">
           <div className="section-heading">
             <div>
-              <div className="eyebrow">SAFE TO EXPLORE</div>
+              <div className="eyebrow">SAFE TO EXPLORE · GUARD LAB</div>
               <h2>
                 See the moment
                 <br />
@@ -593,10 +850,65 @@ function App() {
               your imported file.
             </p>
           </div>
+          <div className="lab-guide">
+            <div>
+              <span>01</span>
+              <p>
+                <strong>Choose a mission</strong>Start with normal work, then
+                compare an attack chain.
+              </p>
+            </div>
+            <div>
+              <span>02</span>
+              <p>
+                <strong>Choose a mode</strong>Enforce stops the fixture. Shadow
+                observes. Learn records.
+              </p>
+            </div>
+            <div>
+              <span>03</span>
+              <p>
+                <strong>Inspect the boundary</strong>Click an action to read the
+                exact rule and model signal.
+              </p>
+            </div>
+          </div>
+          {launchNotice && (
+            <div className="launch-notice" role="status">
+              <ArrowRight size={13} />
+              {launchNotice}
+            </div>
+          )}
+          {scenarios.length > 0 && (
+            <div className="mission-grid" aria-label="Reviewed missions">
+              {scenarios.map((item) => (
+                <button
+                  key={item.id}
+                  className={`mission-card ${scenario === item.id && panel === "replay" ? "selected" : ""}`}
+                  onClick={() => chooseMission(item.id)}
+                  disabled={pending}
+                  aria-pressed={scenario === item.id && panel === "replay"}
+                >
+                  <span>
+                    {item.family === "benign" ? "BASELINE" : item.family} /{" "}
+                    {familyNames[item.family ?? ""] ?? "Reviewed scenario"}
+                  </span>
+                  <strong>{item.title}</strong>
+                  <p>{item.description}</p>
+                  <small>
+                    {scenario === item.id && panel === "replay"
+                      ? "Selected mission"
+                      : "Explore mission"}
+                    <ArrowRight size={12} />
+                  </small>
+                </button>
+              ))}
+            </div>
+          )}
           <div className="console">
             <div className="console-top">
               <span>
-                <Terminal size={15} /> Guard playground
+                <Terminal size={15} /> Guard lab
               </span>
               <span className="console-label">
                 {source === "import"
@@ -700,8 +1012,8 @@ function App() {
                       <select
                         id="scenario"
                         value={scenario}
-                        onChange={(e) => setScenario(e.target.value)}
-                        disabled={!scenarios.length}
+                        onChange={(e) => chooseMission(e.target.value)}
+                        disabled={!scenarios.length || pending}
                       >
                         <option value="" disabled>
                           Choose a scenario
@@ -715,12 +1027,26 @@ function App() {
                     )}
                     <div className="scenario-description">
                       {current?.family && (
-                        <span className="family-tag">{current.family}</span>
+                        <span className="family-tag">
+                          {familyNames[current.family] ?? current.family}
+                        </span>
                       )}
                       <p>
                         {current?.description ??
                           "Select a reviewed scenario to inspect the action chain."}
                       </p>
+                      <button
+                        className="share-mission"
+                        onClick={shareMission}
+                        disabled={!scenario}
+                      >
+                        {shared ? (
+                          <Check size={12} />
+                        ) : (
+                          <ArrowUpRight size={12} />
+                        )}{" "}
+                        {shared ? "Mission link copied" : "Share this mission"}
+                      </button>
                     </div>
                   </>
                 ) : panel === "compose" ? (
@@ -742,7 +1068,9 @@ function App() {
                         onChange={(e) => setObject(e.target.value)}
                       >
                         {objects.map((x) => (
-                          <option key={x}>{x}</option>
+                          <option key={x} value={x}>
+                            {objectNames[x] ?? x} · {x}
+                          </option>
                         ))}
                       </select>
                       <select
@@ -757,7 +1085,7 @@ function App() {
                     </div>
                     <div className="flag-options">
                       {allFlags.map((flag) => (
-                        <label key={flag}>
+                        <label key={flag} title={flagHelp[flag]}>
                           <input
                             type="checkbox"
                             checked={flags.includes(flag)}
@@ -772,6 +1100,17 @@ function App() {
                           {flag}
                         </label>
                       ))}
+                    </div>
+                    <div className="composer-preview">
+                      <span>ACTION SENTENCE</span>
+                      <code>
+                        {verb} {object} via {channel}
+                        {allFlags
+                          .filter((flag) => flags.includes(flag))
+                          .map((flag) => ` ${flag}`)
+                          .join("")}{" "}
+                        .
+                      </code>
                     </div>
                     <button
                       className="button secondary"
@@ -790,6 +1129,48 @@ function App() {
                     >
                       Add to sequence <ArrowRight size={14} />
                     </button>
+                    <div className="composer-presets">
+                      <button
+                        onClick={() =>
+                          setComposed([
+                            {
+                              verb: "read",
+                              object: "proj-file",
+                              channel: "file-tool",
+                              flags: [],
+                            },
+                            {
+                              verb: "edit",
+                              object: "proj-file",
+                              channel: "file-tool",
+                              flags: [],
+                            },
+                            {
+                              verb: "exec",
+                              object: "test-runner",
+                              channel: "shell",
+                              flags: [],
+                            },
+                          ])
+                        }
+                      >
+                        Start with project work
+                      </button>
+                      <button
+                        onClick={() =>
+                          setComposed([
+                            {
+                              verb: "write",
+                              object: "guard-config",
+                              channel: "file-tool",
+                              flags: [],
+                            },
+                          ])
+                        }
+                      >
+                        Try a guard-tamper request
+                      </button>
+                    </div>
                     <ol className="composed-list">
                       {composed.map((action, i) => (
                         <li key={i}>
@@ -844,7 +1225,32 @@ function App() {
                 )}
                 {panel !== "audit" && (
                   <>
-                    <label className="mode-label">GUARD MODE</label>
+                    <details className="terms-help">
+                      <summary>What do these signals mean?</summary>
+                      <dl>
+                        <dt>Surprise</dt>
+                        <dd>
+                          How rare the model considers an action in context,
+                          measured in bits. It is not an attack probability.
+                        </dd>
+                        <dt>Tainted</dt>
+                        <dd>
+                          The session has ingested untrusted content. Later
+                          actions retain that context until a human clears it.
+                        </dd>
+                        <dt>Rule</dt>
+                        <dd>
+                          An explicit policy boundary, such as refusing edits to
+                          the guard itself.
+                        </dd>
+                      </dl>
+                    </details>
+                    <label className="mode-label">
+                      GUARD MODE{" "}
+                      <span title="Enforce applies decisions to the fixture; shadow observes recommendations; learn records without scoring.">
+                        ?
+                      </span>
+                    </label>
                     <div
                       className="mode-toggle"
                       role="group"
@@ -856,6 +1262,13 @@ function App() {
                           aria-pressed={mode === x}
                           className={mode === x ? "active" : ""}
                           onClick={() => setMode(x)}
+                          title={
+                            x === "enforce"
+                              ? "Apply allow, hold and block decisions to the replay."
+                              : x === "shadow"
+                                ? "Keep fixture actions permitted and show recommendations."
+                                : "Record actions without scoring or policy."
+                          }
                         >
                           {x}
                         </button>
@@ -885,7 +1298,7 @@ function App() {
                         ? "Evaluating…"
                         : panel === "compose"
                           ? "Check sequence"
-                          : "Run simulation"}
+                          : "Run replay"}
                       <ArrowRight size={14} />
                     </button>
                   </>
@@ -916,22 +1329,38 @@ function App() {
                   </div>
                 ) : (
                   <>
+                    <div className={`run-outcome ${outcome.decision}`}>
+                      <div>
+                        <span className="mono-label">
+                          {source === "import"
+                            ? "IMPORTED AUDIT"
+                            : source === "composed"
+                              ? "TYPED ANALYSIS"
+                              : `LAST REPLAY · ${reportMode.toUpperCase()}${report?.title ? ` · ${String(report.title)}` : ""}`}
+                        </span>
+                        <h3>{outcome.title}</h3>
+                        <p>{outcome.description}</p>
+                      </div>
+                      <button onClick={() => setSelected(outcome.index)}>
+                        Inspect boundary <ArrowRight size={13} />
+                      </button>
+                    </div>
                     <div className="trace-summary">
                       <div>
                         <strong>{events.length}</strong>
-                        <span>actions</span>
+                        <span>records</span>
                       </div>
                       <div>
                         <strong className="allow-text">{counts.allow}</strong>
-                        <span>allowed</span>
+                        <span>allow verdicts</span>
                       </div>
                       <div>
                         <strong className="hold-text">{counts.hold}</strong>
-                        <span>held</span>
+                        <span>hold verdicts</span>
                       </div>
                       <div>
                         <strong className="block-text">{counts.block}</strong>
-                        <span>blocked</span>
+                        <span>block verdicts</span>
                       </div>
                       <button
                         title="Download redacted audit"
@@ -972,10 +1401,16 @@ function App() {
                           return (
                             <button
                               key={`${event.id}-${index}`}
-                              className={`trace-row ${selected === index ? "selected" : ""}`}
+                              className={`trace-row ${selected === index ? "selected" : ""} ${outcome.hypotheticalAfter >= 0 && index > outcome.hypotheticalAfter ? "hypothetical" : ""}`}
                               onClick={() => setSelected(index)}
                               aria-label={`Action ${index + 1}: ${event.pebble}, ${event.decision}. Inspect decision`}
                             >
+                              {outcome.hypotheticalAfter >= 0 &&
+                                index === outcome.hypotheticalAfter + 1 && (
+                                  <span className="hypothetical-label">
+                                    HYPOTHETICAL CONTINUATION · NOT EXECUTED
+                                  </span>
+                                )}
                               <span className="trace-seq">
                                 {String(index + 1).padStart(2, "0")}
                               </span>
@@ -986,9 +1421,12 @@ function App() {
                                   {event.tainted
                                     ? " · after untrusted input"
                                     : ""}
-                                  {event.executed === false
-                                    ? " · not executed"
-                                    : ""}
+                                  {outcome.hypotheticalAfter >= 0 &&
+                                  index > outcome.hypotheticalAfter
+                                    ? " · hypothetical"
+                                    : event.executed === false
+                                      ? " · not executed"
+                                      : ""}
                                 </span>
                               </span>
                               <span className="trace-score">
@@ -1009,6 +1447,14 @@ function App() {
                           <span>DECISION EXPLAINED</span>
                           <Status value={active.decision} />
                         </div>
+                        {outcome.hypotheticalAfter >= 0 &&
+                          selected > outcome.hypotheticalAfter && (
+                            <div className="hypothetical-notice">
+                              This action is a hypothetical next step. The
+                              replay had already stopped; this decision did not
+                              describe an executed tool call.
+                            </div>
+                          )}
                         <p>{active.reason}</p>
                         {active.would_have &&
                           active.would_have !== active.decision && (
@@ -1035,7 +1481,9 @@ function App() {
                             </dd>
                           </div>
                           <div>
-                            <dt>Model signal</dt>
+                            <dt title="Maximum negative log-probability of a token in this action, in bits. A rarity score, not a probability of attack.">
+                              Model surprise ⓘ
+                            </dt>
                             <dd>
                               {active.surprise_bits === null
                                 ? "Not scored in this record"
@@ -1167,13 +1615,65 @@ function App() {
             </article>
           </div>
         </section>
+        <section className="ecosystem-story section" id="ecosystem">
+          <div className="section-heading">
+            <div>
+              <div className="eyebrow">ONE OPEN PROJECT. THREE WAYS IN.</div>
+              <h2>
+                Write. Train.
+                <br />
+                Set a boundary.
+              </h2>
+            </div>
+            <p>
+              Pebble connects a small programming language, an educational 2M
+              text model, and an action guard. Their tasks are different; their
+              implementation and evidence are open.
+            </p>
+          </div>
+          <div className="ecosystem-cards">
+            <a href="https://pebble-peach-kappa.vercel.app/">
+              <span>01 / LANGUAGE</span>
+              <h3>Learn by running it.</h3>
+              <p>
+                Write Pebble, inspect the interpreter, and turn an idea into a
+                program in the studio.
+              </p>
+              <strong>
+                Open Language <ArrowUpRight size={15} />
+              </strong>
+            </a>
+            <a href="https://pebble-llm.vercel.app">
+              <span>02 / MODEL</span>
+              <h3>Meet the tiny model.</h3>
+              <p>
+                Explore a 2M-parameter model trained using Pebble. Educational
+                text generation, with its limits visible.
+              </p>
+              <strong>
+                Open Model <ArrowUpRight size={15} />
+              </strong>
+            </a>
+            <a href="#playground" aria-current="page">
+              <span>03 / SENTINEL</span>
+              <h3>Understand the action.</h3>
+              <p>
+                Replay a guard trained on typed workflows. Different vocabulary,
+                separate weights, explicit decisions.
+              </p>
+              <strong>
+                Explore Sentinel <ArrowRight size={15} />
+              </strong>
+            </a>
+          </div>
+        </section>
         <section className="install section" id="open-source">
           <div>
             <div className="eyebrow">BUILT TO BE OPENED</div>
             <h2>
               Take the guard
               <br />
-              with you.
+              into your workflow.
             </h2>
             <p>
               Code, authored data, model artifacts, and documentation are open
@@ -1220,6 +1720,24 @@ function App() {
               {copied ? <Check size={13} /> : <Terminal size={13} />}{" "}
               {copied ? "Copied" : "Copy simulation command"}
             </button>
+            <div className="setup-path">
+              <strong>From demo to your harness</strong>
+              <ol>
+                <li>Run the canary replay locally and inspect the audit.</li>
+                <li>Wire a local or MCP adapter before tool dispatch.</li>
+                <li>
+                  Use shadow mode on reviewed workflows; evaluate false alarms
+                  before enforcing.
+                </li>
+              </ol>
+              <a
+                href={`${repo}/blob/main/docs/core.md`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open integration guide <ArrowUpRight size={12} />
+              </a>
+            </div>
             <p>
               Follow the README for model setup and harness installation. The
               hosted demo does not install a guard on your device.
@@ -1254,8 +1772,20 @@ function App() {
           >
             Model card
           </a>
-          <a href={`${repo}/blob/main/DATA_CARD.md`} target="_blank" rel="noreferrer">Data card</a>
-          <a href={`${repo}/blob/main/web/THIRD_PARTY_NOTICES.md`} target="_blank" rel="noreferrer">Third-party notices</a>
+          <a
+            href={`${repo}/blob/main/DATA_CARD.md`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Data card
+          </a>
+          <a
+            href={`${repo}/blob/main/web/THIRD_PARTY_NOTICES.md`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Third-party notices
+          </a>
           <a
             href="https://github.com/YashAnand69/pebble"
             target="_blank"

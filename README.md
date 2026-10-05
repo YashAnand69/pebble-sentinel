@@ -1,5 +1,9 @@
 # Pebble Sentinel
 
+**[Pebble ecosystem](https://pebble-peach-kappa.vercel.app/?view=ecosystem)** · [Language Studio](https://pebble-peach-kappa.vercel.app/?view=studio) · [PebbleLM](https://pebble-llm.vercel.app/) · [Sentinel](https://pebble-sentinel.vercel.app/)
+
+[Use cases and integrated journeys](docs/ECOSYSTEM.md)
+
 A pre-execution guard for AI agents, built around a small Transformer trained **in Pebble**. Sentinel converts tool effects into typed actions, combines anomaly scores with explicit rules, and asks for approval or blocks risky calls before execution.
 
 The useful problem: an agent can mistake instructions inside a web page, skill or tool response for permission to read credentials, send them away or change its own guard. Sentinel puts a separate decision point between those instructions and a tool's effects.
