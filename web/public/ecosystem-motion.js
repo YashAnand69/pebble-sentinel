@@ -8,8 +8,8 @@
   const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
   const motionOff = () => {
     let saved = false;
-    try { saved = localStorage.getItem('pebble-motion') === 'off'; } catch {}
-    return preference.matches || saved || document.documentElement.dataset.motion === 'off';
+    try { saved = localStorage.getItem('pebble-motion') === 'off' || localStorage.getItem('pebble-motion-v1') === 'reduced'; } catch {}
+    return preference.matches || saved || document.documentElement.dataset.motion === 'off' || document.documentElement.dataset.pebbleMotion === 'reduced';
   };
   let overlay;
   let timer;

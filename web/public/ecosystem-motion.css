@@ -40,4 +40,4 @@
   100% { transform: translate(-50%, -50%) scale(1.5) rotate(0); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .pebble-transition { display: none; } }
-html[data-motion="off"] .pebble-transition { display: none; }
+html[data-motion="off"] .pebble-transition, html[data-pebble-motion="reduced"] .pebble-transition { display: none; }
