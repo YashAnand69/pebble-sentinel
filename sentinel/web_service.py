@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import math
 import threading
 
 from .simulation import list_scenarios, run_simulation, evaluate_actions
@@ -21,6 +22,9 @@ def model_scorer():
 
 
 def model_info(scorer):
+    calibrated = scorer.metadata.get('calibrated') is True
+    hold_threshold = getattr(scorer, 'hold_threshold', None)
+    block_threshold = getattr(scorer, 'block_threshold', None)
     return {
         **scorer.metadata,
         'kind': 'transformer',
@@ -31,6 +35,20 @@ def model_info(scorer):
         'trained_in': 'Pebble',
         'inference_backend': 'NumPy CPU',
         'license': 'MIT',
+        'hold_threshold_bits': (
+            float(hold_threshold)
+            if calibrated
+            and isinstance(hold_threshold, (int, float))
+            and math.isfinite(hold_threshold)
+            else None
+        ),
+        'block_threshold_bits': (
+            float(block_threshold)
+            if calibrated
+            and isinstance(block_threshold, (int, float))
+            and math.isfinite(block_threshold)
+            else None
+        ),
     }
 
 

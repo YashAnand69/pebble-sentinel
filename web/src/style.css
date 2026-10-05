@@ -279,6 +279,37 @@ h1 em {
   color: #758976;
   margin-top: 19px;
 }
+.service-status {
+  min-height: 30px;
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #a7b6a7;
+  font-size: 12px;
+}
+.service-indicator {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: #d6ae64;
+}
+.service-status.ready .service-indicator { background: var(--green); }
+.service-status.unavailable .service-indicator { background: var(--coral); }
+.service-status button {
+  padding: 3px 7px;
+  border: 1px solid #536553;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--green);
+}
+.threshold-explainer {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.6;
+}
 .scene {
   --scroll: 0;
   position: relative;
