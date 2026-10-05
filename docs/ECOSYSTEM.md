@@ -25,3 +25,9 @@ Each public app publishes `ecosystem.json` with canonical product links and scop
 ## Evidence stays attached to the product
 
 PebbleLM's reserved-prompt exact-answer score is 4/40; its canonical seen-prompt score is 38/40. This is not a measure of general intelligence. Sentinel's rules already detect all six authored attack episodes, its false alarms remain material, and mature-window scorer p95 is 48.387 ms. The integrated UI uses the actual services; combining the apps does not improve these published model results.
+
+## Motion and direct journeys
+
+Scroll reveals, layered 3D illustrations and pointer responses add depth without moving editable code or automatically running work. Motion respects the operating-system preference and each app offers a visible reduced-motion control. The illustrations explain architecture; they are not live training or security telemetry.
+
+Share a selected embedded tool with `?view=ecosystem&tool=language`, `tool=model` or `tool=sentinel`. Refresh and back navigation retain the approved selection; generation and replay still require an explicit action. [PebbleLM’s usage guide](https://pebble-llm.vercel.app/guide.html) includes the recorded showcase alongside local training instructions.

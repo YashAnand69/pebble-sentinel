@@ -3,6 +3,7 @@ import type { ChangeEvent } from "react";
 import { parseAudit } from "./audit";
 import Evaluation from "./Evaluation";
 import { parseLaunch, summarizeRun } from "./lab";
+import { useScrollReveals } from "./useScrollReveals";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -277,23 +278,65 @@ function ShieldScene({ reduced }: { reduced: boolean }) {
     const node = root.current;
     if (!node || reduced) return;
     let raf = 0;
+    let pointerX = 0;
+    let pointerY = 0;
     const update = () => {
       if (raf) return;
       raf = requestAnimationFrame(() => {
         const rect = node.getBoundingClientRect();
-        const progress = Math.max(
-          -1,
-          Math.min(1, (innerHeight / 2 - rect.top) / innerHeight),
-        );
-        node.style.setProperty("--scroll", String(progress));
+        if (rect.bottom > -80 && rect.top < innerHeight + 80) {
+          const progress = Math.max(
+            -1,
+            Math.min(1, (innerHeight / 2 - rect.top) / innerHeight),
+          );
+          node.style.setProperty("--scroll", String(progress));
+          node.style.setProperty("--pointer-x", String(pointerX));
+          node.style.setProperty("--pointer-y", String(pointerY));
+        }
         raf = 0;
       });
     };
+    const move = (event: PointerEvent) => {
+      const rect = node.getBoundingClientRect();
+      pointerX = Math.max(
+        -1,
+        Math.min(
+          1,
+          ((event.clientX - rect.left) / Math.max(1, rect.width) - 0.5) * 2,
+        ),
+      );
+      pointerY = Math.max(
+        -1,
+        Math.min(
+          1,
+          ((event.clientY - rect.top) / Math.max(1, rect.height) - 0.5) * 2,
+        ),
+      );
+      update();
+    };
+    const leave = () => {
+      pointerX = 0;
+      pointerY = 0;
+      update();
+    };
+    const finePointer = matchMedia(
+      "(hover: hover) and (pointer: fine)",
+    ).matches;
     window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    if (finePointer) {
+      node.addEventListener("pointermove", move, { passive: true });
+      node.addEventListener("pointerleave", leave, { passive: true });
+    }
     update();
     return () => {
       window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      node.removeEventListener("pointermove", move);
+      node.removeEventListener("pointerleave", leave);
       cancelAnimationFrame(raf);
+      node.style.setProperty("--pointer-x", "0");
+      node.style.setProperty("--pointer-y", "0");
     };
   }, [reduced]);
   return (
@@ -302,6 +345,7 @@ function ShieldScene({ reduced }: { reduced: boolean }) {
       ref={root}
       aria-label="Conceptual 3D guard: an agent action passes through encoding, scoring and policy before a decision"
     >
+      <div className="scene-light" aria-hidden="true" />
       <div className="scene-grid" />
       <div className="orbit orbit-one" />
       <div className="orbit orbit-two" />
@@ -356,9 +400,19 @@ function App() {
     [composed, setComposed] = useState<Record<string, unknown>[]>([]),
     [copied, setCopied] = useState(false),
     [model, setModel] = useState<Record<string, unknown> | null>(null),
-    [reducedMotion, setReducedMotion] = useState(
+    [manualReducedMotion, setManualReducedMotion] = useState(false),
+    [systemReducedMotion, setSystemReducedMotion] = useState(
       () => matchMedia("(prefers-reduced-motion: reduce)").matches,
-    );
+    ),
+    [arrival, setArrival] = useState(0);
+  const reducedMotion = manualReducedMotion || systemReducedMotion;
+  useScrollReveals(reducedMotion, scenarios.length);
+  useEffect(() => {
+    const preference = matchMedia("(prefers-reduced-motion: reduce)");
+    const changed = () => setSystemReducedMotion(preference.matches);
+    preference.addEventListener("change", changed);
+    return () => preference.removeEventListener("change", changed);
+  }, []);
   const fileInput = useRef<HTMLInputElement>(null);
   const launchScroll = useRef(false);
   useEffect(() => {
@@ -387,14 +441,11 @@ function App() {
           if (!launchScroll.current) {
             launchScroll.current = true;
             requestAnimationFrame(() =>
-              document
-                .getElementById("playground")
-                ?.scrollIntoView({
-                  behavior: matchMedia("(prefers-reduced-motion: reduce)")
-                    .matches
-                    ? "auto"
-                    : "smooth",
-                }),
+              document.getElementById("playground")?.scrollIntoView({
+                behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+                  ? "auto"
+                  : "smooth",
+              }),
             );
           }
         } else if (launch.rejectedScenario) {
@@ -475,6 +526,7 @@ function App() {
       const normalized = normalizeReport(data);
       const nextSource = panel === "compose" ? "composed" : "simulation";
       setReport(normalized);
+      setArrival((value) => value + 1);
       if (data.model) setModel(data.model);
       setSelected(summarizeRun(normalized.events, mode, nextSource).index);
       setSource(nextSource);
@@ -815,11 +867,9 @@ function App() {
                 className="text-link"
                 onClick={() => {
                   setPanel("compose");
-                  document
-                    .getElementById("playground")
-                    ?.scrollIntoView({
-                      behavior: reducedMotion ? "auto" : "smooth",
-                    });
+                  document.getElementById("playground")?.scrollIntoView({
+                    behavior: reducedMotion ? "auto" : "smooth",
+                  });
                 }}
               >
                 Compose a typed boundary test <ArrowRight size={14} />
@@ -980,7 +1030,8 @@ function App() {
             )}
             <div className="console-body">
               <aside
-                className="controls"
+                className="controls panel-arrival"
+                key={panel}
                 id={`${panel}-panel`}
                 role="tabpanel"
                 aria-labelledby={`${panel}-tab`}
@@ -1329,7 +1380,10 @@ function App() {
                   </div>
                 ) : (
                   <>
-                    <div className={`run-outcome ${outcome.decision}`}>
+                    <div
+                      className={`run-outcome ${outcome.decision} ${source !== "import" ? "decision-arrival" : ""}`}
+                      key={`outcome-${arrival}-${source}`}
+                    >
                       <div>
                         <span className="mono-label">
                           {source === "import"
@@ -1400,8 +1454,11 @@ function App() {
                           const index = pageStart + pageIndex;
                           return (
                             <button
-                              key={`${event.id}-${index}`}
-                              className={`trace-row ${selected === index ? "selected" : ""} ${outcome.hypotheticalAfter >= 0 && index > outcome.hypotheticalAfter ? "hypothetical" : ""}`}
+                              key={`${arrival}-${event.id}-${index}`}
+                              style={{
+                                animationDelay: `${Math.min(pageIndex, 8) * 35}ms`,
+                              }}
+                              className={`trace-row ${source !== "import" ? "record-arrival" : ""} ${selected === index ? "selected" : ""} ${outcome.hypotheticalAfter >= 0 && index > outcome.hypotheticalAfter ? "hypothetical" : ""}`}
                               onClick={() => setSelected(index)}
                               aria-label={`Action ${index + 1}: ${event.pebble}, ${event.decision}. Inspect decision`}
                             >
@@ -1754,9 +1811,19 @@ function App() {
           <button
             className="motion-toggle"
             aria-pressed={reducedMotion}
-            onClick={() => setReducedMotion((x) => !x)}
+            onClick={() => setManualReducedMotion((x) => !x)}
+            disabled={systemReducedMotion}
+            title={
+              systemReducedMotion
+                ? "Reduced motion follows your operating-system preference."
+                : "Turn off scroll, hover, and arrival animations."
+            }
           >
-            {reducedMotion ? "Motion off" : "Reduce motion"}
+            {systemReducedMotion
+              ? "Motion off (system)"
+              : reducedMotion
+                ? "Motion off"
+                : "Reduce motion"}
           </button>
           <a
             href={`${repo}/blob/main/LICENSE`}

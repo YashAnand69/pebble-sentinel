@@ -2991,5 +2991,171 @@ footer > span {
     letter-spacing: 0.7px;
   }
 }
-.benchmark-scroll:focus-visible{outline:2px solid var(--green);outline-offset:4px}.trace-seq{font-size:8px;overflow-wrap:anywhere;line-height:1.4}
-html.motion-disabled{scroll-behavior:auto}html.motion-disabled *,html.motion-disabled *::before,html.motion-disabled *::after{animation:none!important;transition:none!important}html.motion-disabled .button:hover:not(:disabled){transform:none}
+.benchmark-scroll:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
+}
+.trace-seq {
+  font-size: 8px;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+html.motion-disabled {
+  scroll-behavior: auto;
+}
+html.motion-disabled *,
+html.motion-disabled *::before,
+html.motion-disabled *::after {
+  animation: none !important;
+  transition: none !important;
+}
+html.motion-disabled .button:hover:not(:disabled) {
+  transform: none;
+}
+.scroll-reveal {
+  transition:
+    opacity 0.65s ease,
+    transform 0.65s cubic-bezier(0.2, 0.65, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.scroll-reveal[data-reveal-state="pending"] {
+  opacity: 0;
+  transform: translate3d(0, 25px, 0);
+}
+.scroll-reveal[data-reveal-state="shown"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+.scene {
+  --pointer-x: 0;
+  --pointer-y: 0;
+}
+.scene-light {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  left: 29%;
+  top: 21%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #baff9b20, transparent 70%);
+  filter: blur(26px);
+  transform: translate3d(
+    calc(var(--pointer-x) * 80px),
+    calc(var(--pointer-y) * 55px),
+    0
+  );
+  pointer-events: none;
+  transition: transform 0.2s linear;
+}
+.shield-stack {
+  transform: rotateX(
+      calc(17deg + var(--scroll) * 12deg + var(--pointer-y) * -8deg)
+    )
+    rotateY(calc(-29deg + var(--scroll) * 25deg + var(--pointer-x) * 12deg))
+    rotateZ(calc(-12deg + var(--scroll) * 3deg));
+  transition: transform 0.18s ease-out;
+}
+.plane-back {
+  transform: translateZ(calc(-100px - var(--scroll) * 16px)) translateX(63px);
+}
+.plane-middle {
+  transform: translateZ(calc(-50px - var(--scroll) * 8px)) translateX(28px);
+}
+.scene-token.token-in {
+  translate: calc(var(--pointer-x) * -5px) calc(var(--pointer-y) * -5px);
+}
+.scene-token.token-out {
+  translate: calc(var(--pointer-x) * 7px) calc(var(--pointer-y) * 7px);
+}
+.panel-arrival {
+  animation: panel-arrive 0.22s ease-out;
+}
+.decision-arrival {
+  animation: decision-arrive 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.record-arrival {
+  animation: record-arrive 0.28s ease-out both;
+}
+@keyframes panel-arrive {
+  from {
+    opacity: 0.45;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes decision-arrive {
+  from {
+    opacity: 0.65;
+    transform: translateY(9px);
+    box-shadow: inset 0 0 0 1px #a9ef8840;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+}
+@keyframes record-arrive {
+  from {
+    opacity: 0.25;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+html.motion-disabled .scroll-reveal,
+.motion-reduced .scroll-reveal {
+  opacity: 1 !important;
+  transform: none !important;
+}
+html.motion-disabled .shield-stack {
+  transform: rotateX(17deg) rotateY(-29deg) rotateZ(-12deg);
+}
+html.motion-disabled .scene-token {
+  translate: none;
+}
+html.motion-disabled .scene-light {
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .shield-stack {
+    transform: rotateX(17deg) rotateY(-29deg) rotateZ(-12deg);
+  }
+  .scene-token {
+    translate: none;
+  }
+  .scene-light {
+    transform: none;
+  }
+  .panel-arrival,
+  .decision-arrival,
+  .record-arrival {
+    animation: none !important;
+  }
+}
+.scroll-reveal:focus-within {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none;
+}
+.scroll-reveal.mission-card,
+.ecosystem-cards > a.scroll-reveal {
+  transition:
+    opacity 0.65s ease,
+    transform 0.65s cubic-bezier(0.2, 0.65, 0.2, 1),
+    border-color 0.2s,
+    background 0.2s;
+  transition-delay:
+    var(--reveal-delay, 0ms), var(--reveal-delay, 0ms), 0ms, 0ms;
+}
+
+.scroll-reveal:focus-within{opacity:1!important;transform:none!important;transition:none!important}

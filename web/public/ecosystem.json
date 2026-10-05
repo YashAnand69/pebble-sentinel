@@ -14,7 +14,8 @@
         "Learn programming with runnable examples and execution traces",
         "Prototype small algorithms and data transformations",
         "Define and train models with the optional local ML runtime"
-      ]
+      ],
+      "embedded_url": "https://pebble-peach-kappa.vercel.app/?view=ecosystem&tool=language#ecosystem-workbench"
     },
     {
       "id": "model",
@@ -27,7 +28,8 @@
         "Compare learned questions with unseen phrasings",
         "Explore how sampling changes character generation",
         "Reproduce a complete small Transformer training experiment"
-      ]
+      ],
+      "embedded_url": "https://pebble-peach-kappa.vercel.app/?view=ecosystem&tool=model#ecosystem-workbench"
     },
     {
       "id": "sentinel",
@@ -40,7 +42,8 @@
         "Add a pre-execution approval gate to an AI tool harness",
         "Replay suspicious skill and prompt-injection action chains safely",
         "Inspect redacted decision audits locally"
-      ]
+      ],
+      "embedded_url": "https://pebble-peach-kappa.vercel.app/?view=ecosystem&tool=sentinel#ecosystem-workbench"
     }
   ],
   "boundary": "PebbleLM and Sentinel use separate trained models. Hosted demos do not install a guard or run visitor shell commands. Browser Studio does not train models."
