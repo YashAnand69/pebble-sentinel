@@ -189,7 +189,8 @@
   color: #697b6c;
   margin-top: 12px;
 }
-.daily-status {
+.daily-workspace .daily-status {
+  color: #2d4135;
   margin-top: 20px;
   background: #e5ece1;
   border: 1px solid #c6d5c1;
