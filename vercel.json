@@ -7,7 +7,7 @@
     "api/index.py": {
       "maxDuration": 60,
       "includeFiles": "{sentinel/**,policy/**,scenarios/**,workflows/**,model/**,results/**}",
-      "excludeFiles": "{web/**,model/node_modules/**,model/data/**,model/reports/**,tests/**,docs/**,.github/**,.superdesign/**}"
+      "excludeFiles": "{web/**,model/node_modules/**,model/data/**,model/reports/**,model/weights/seed-2027.pebble-weights,model/weights/seed-2028.pebble-weights,tests/**,docs/**,.github/**,.superdesign/**}"
     }
   },
   "rewrites": [

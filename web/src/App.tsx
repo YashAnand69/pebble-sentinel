@@ -546,7 +546,7 @@ function App() {
           <span>PEBBLE ECOSYSTEM</span>
         </a>
         <div>
-          <a href="https://pebble-peach-kappa.vercel.app/">
+          <a href="https://pebble-peach-kappa.vercel.app/?view=studio">
             <span>01</span> Language
           </a>
           <a href="https://pebble-llm.vercel.app">
@@ -1632,7 +1632,7 @@ function App() {
             </p>
           </div>
           <div className="ecosystem-cards">
-            <a href="https://pebble-peach-kappa.vercel.app/">
+            <a href="https://pebble-peach-kappa.vercel.app/?view=studio">
               <span>01 / LANGUAGE</span>
               <h3>Learn by running it.</h3>
               <p>
