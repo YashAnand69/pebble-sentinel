@@ -152,19 +152,19 @@ export default function DailyWorkspace() {
           "The response did not match your action. Nothing was opened or downloaded.",
         );
       setCheck(result);
+      setAudit((a) =>
+        upsertDailyAudit(a, {
+          id: result.record.id,
+          action: op.action,
+          decision: result.decision,
+          completed: false,
+          approved: false,
+          surprise_bits: result.record.surprise_bits,
+          rules: result.record.rules,
+        }),
+      );
       if (result.decision === "allow") await complete(op, result, false);
       else {
-        setAudit((a) =>
-          upsertDailyAudit(a, {
-            id: result.record.id,
-            action: op.action,
-            decision: result.decision,
-            completed: false,
-            approved: false,
-            surprise_bits: result.record.surprise_bits,
-            rules: result.record.rules,
-          }),
-        );
         if (result.decision === "hold") {
           setHeld(op);
           setNotice(
