@@ -6,6 +6,8 @@ The useful problem: an agent can mistake instructions inside a web page, skill o
 
 ## Try it
 
+**[Open the live laboratory](https://pebble-sentinel.vercel.app/)** · [Two-minute demo script](docs/DEMO_SCRIPT.md)
+
 The web laboratory includes seven reviewed scenarios, learn/shadow/enforce modes, a typed-action composer, private browser-side audit inspection and the actual evaluation results. It is a simulation; it does not protect your computer or execute visitor commands. The interface includes scroll-linked 3D artwork, responsive layouts and reduced-motion controls.
 
 ```sh
