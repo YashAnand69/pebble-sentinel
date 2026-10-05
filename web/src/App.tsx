@@ -222,33 +222,50 @@ function normalizeReport(raw: Record<string, unknown>): Report {
   };
 }
 async function request(path: string, body?: unknown) {
-  let response: Response;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 20000);
   try {
-    response = await fetch(path, {
-      method: body ? "POST" : "GET",
-      headers: body ? { "Content-Type": "application/json" } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
-    });
-  } catch {
-    throw new Error(
-      "The guard service is unreachable. Check your connection and try again.",
-    );
+    let response: Response;
+    try {
+      response = await fetch(path, {
+        method: body ? "POST" : "GET",
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+    } catch {
+      if (controller.signal.aborted) {
+        throw new Error(
+          "The guard service did not respond within 20 seconds. Please retry.",
+        );
+      }
+      throw new Error(
+        "The guard service is unreachable. Check your connection and try again.",
+      );
+    }
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      if (controller.signal.aborted) {
+        throw new Error(
+          "The guard service did not respond within 20 seconds. Please retry.",
+        );
+      }
+      throw new Error(
+        "The guard service returned an unreadable response. Please try again.",
+      );
+    }
+    if (!response.ok)
+      throw new Error(
+        data.error ??
+          data.detail ??
+          "The guard service could not complete this request.",
+      );
+    return data;
+  } finally {
+    window.clearTimeout(timeout);
   }
-  let data;
-  try {
-    data = await response.json();
-  } catch {
-    throw new Error(
-      "The guard service returned an unreadable response. Please try again.",
-    );
-  }
-  if (!response.ok)
-    throw new Error(
-      data.error ??
-        data.detail ??
-        "The guard service could not complete this request.",
-    );
-  return data;
 }
 function Status({ value }: { value: Verdict }) {
   return (
@@ -401,6 +418,9 @@ function App() {
     [composed, setComposed] = useState<Record<string, unknown>[]>([]),
     [copied, setCopied] = useState(false),
     [model, setModel] = useState<Record<string, unknown> | null>(null),
+    [serviceStatus, setServiceStatus] = useState<
+      "checking" | "ready" | "unavailable"
+    >("checking"),
     [manualReducedMotion, setManualReducedMotion] = useState(false),
     [systemReducedMotion, setSystemReducedMotion] = useState(
       () => matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -423,8 +443,12 @@ function App() {
   useEffect(() => {
     let alive = true;
     request("/api/health")
-      .then((data) => alive && setModel(data.model))
-      .catch(() => {});
+      .then((data) => {
+        if (!alive) return;
+        setModel(data.model);
+        setServiceStatus("ready");
+      })
+      .catch(() => alive && setServiceStatus("unavailable"));
     request("/api/scenarios")
       .then((data) => {
         if (!alive) return;
@@ -434,7 +458,14 @@ function App() {
           window.location.search,
           list.map((item: Scenario) => item.id),
         );
-        setScenario(launch.scenario ?? list[0]?.id ?? "");
+        setScenario(
+          launch.scenario ??
+            list.find(
+              (item: Scenario) => item.id === "injection-exfiltration",
+            )?.id ??
+            list[0]?.id ??
+            "",
+        );
         if (launch.reviewedLink) {
           setLaunchNotice(
             "Shared mission selected. Nothing has run yet — choose Run replay when you are ready.",
@@ -528,7 +559,10 @@ function App() {
       const nextSource = panel === "compose" ? "composed" : "simulation";
       setReport(normalized);
       setArrival((value) => value + 1);
-      if (data.model) setModel(data.model);
+      if (data.model) {
+        setModel(data.model);
+        setServiceStatus("ready");
+      }
       setSelected(summarizeRun(normalized.events, mode, nextSource).index);
       setSource(nextSource);
     } catch (e) {
@@ -537,6 +571,16 @@ function App() {
       );
     } finally {
       setPending(false);
+    }
+  }
+  async function retryHealth() {
+    setServiceStatus("checking");
+    try {
+      const data = await request("/api/health");
+      setModel(data.model);
+      setServiceStatus("ready");
+    } catch {
+      setServiceStatus("unavailable");
     }
   }
   async function importAudit(e: ChangeEvent<HTMLInputElement>) {
@@ -660,12 +704,30 @@ function App() {
               what stops.
             </p>
             <div className="hero-actions">
-              <a className="button primary" href="#daily-workspace">
-                Use the daily workspace <ArrowRight size={16} />
+              <a className="button primary" href="#playground">
+                Run the demo <Play size={15} />
               </a>
-              <a className="text-link" href="#playground">
-                Explore the guard lab <ChevronDown size={15} />
+              <a className="text-link" href="#daily-workspace">
+                Try the daily workspace <ChevronDown size={15} />
               </a>
+            </div>
+            <div
+              className={`service-status ${serviceStatus}`}
+              role={serviceStatus === "unavailable" ? "alert" : "status"}
+              aria-live="polite"
+            >
+              <span className="service-indicator" aria-hidden="true" />
+              {serviceStatus === "checking"
+                ? "Checking demo service…"
+                : serviceStatus === "unavailable" ? (
+                    <>
+                      <span>Demo service unavailable.</span>
+                      <button onClick={() => void retryHealth()}>Retry</button>
+                    </>
+                  )
+                  : model?.calibrated === true
+                    ? "Demo ready · empirical thresholds loaded"
+                    : "Demo ready · calibration needs review"}
             </div>
             <div className="hero-footnote">
               <LockKeyhole size={12} /> Files stay on your device. No shell
@@ -1547,7 +1609,25 @@ function App() {
                             <dd>
                               {active.surprise_bits === null
                                 ? "Not scored in this record"
-                                : `${active.surprise_bits.toFixed(3)} bits of maximum token surprise`}
+                                : (
+                                  <>
+                                    {`${active.surprise_bits.toFixed(3)} bits of maximum token surprise`}
+                                    {model?.calibrated === true &&
+                                      typeof model.hold_threshold_bits ===
+                                        "number" && (
+                                        <small className="threshold-explainer">
+                                          Hold threshold:{" "}
+                                          {model.hold_threshold_bits.toFixed(3)} bits
+                                          {typeof model.block_threshold_bits ===
+                                          "number"
+                                            ? ` · block threshold: ${model.block_threshold_bits.toFixed(3)} bits`
+                                            : " · score threshold does not independently block"}
+                                          . Scores measure rarity, not attack
+                                          probability.
+                                        </small>
+                                      )}
+                                  </>
+                                )}
                             </dd>
                           </div>
                           {active.args_digest && (
