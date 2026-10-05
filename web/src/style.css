@@ -2116,3 +2116,18 @@ footer>div{flex-wrap:wrap;justify-content:flex-end;row-gap:12px}footer>.brand{wh
 .benchmark-table{font-size:10px}.benchmark-table thead{font-size:9px}.benchmark-table th:first-child{font-size:10px}.benchmark-controls label{font-size:10px}.benchmark-controls select{font-size:11px}.benchmark-legend{font-size:10px!important}.calibration-caveat p{font-size:11px}.calibration-caveat strong{font-size:11px}.calibration-caveat>span{font-size:9px}.latency-cards span,.latency-cards p{font-size:10px}.evaluation-content>.control-note{font-size:11px!important}.trace-action code{font-size:11px}.trace-action>span{font-size:9px}@media(max-width:760px){.benchmark-table{min-width:380px;font-size:10px}.benchmark-table th:first-child{font-size:10px}.trace-action code{font-size:10px}}
 .hosted-thresholds{border:1px solid #384a36;padding:14px;margin-top:16px;border-radius:3px;color:#a3c294}.hosted-thresholds>span{font-size:9px;color:#79977b}.hosted-thresholds>div{display:flex;justify-content:space-between;gap:15px;font:10px ui-monospace,monospace;margin-top:10px}.hosted-thresholds p{font-size:10px;color:#81997e;margin-top:10px;line-height:1.8}
 .seed-aggregate{border-top:1px solid #2e4232;padding-top:17px;margin-top:20px}.seed-aggregate>span{font-size:10px;color:#8ba58a}.seed-aggregate p{display:flex;justify-content:space-between;gap:15px;margin:10px 0;font-size:10px;color:#7a997c}.seed-aggregate strong{font:11px ui-monospace,monospace;color:#b6d6a9}.seed-aggregate small{font-size:9px;color:#67856d;line-height:1.8;display:block}
+.evidence-grid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+.evidence-results,.evaluation-content,.benchmark-scroll,.benchmark-controls,.benchmark-controls label,.latency-cards,.latency-cards>div{min-width:0;max-width:100%}
+.benchmark-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+.benchmark-controls label{flex:1 1 0}
+.benchmark-controls select{max-width:100%;min-width:0}
+.evaluation-content details,.evaluation-content pre{min-width:0;max-width:100%}
+.evaluation-content p,.evaluation-content summary,.calibration-caveat,.hosted-thresholds,.seed-aggregate{overflow-wrap:anywhere}
+@media(max-width:760px){
+ .evidence-grid{align-items:stretch}
+ .evidence-results,.limits{width:100%;min-width:0}
+ .benchmark-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);width:100%;gap:12px}
+ .latency-cards{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .hosted-thresholds>div{flex-wrap:wrap}
+ .scene{overflow:clip}
+}
